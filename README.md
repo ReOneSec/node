@@ -4,8 +4,6 @@
 
 # Features
 
-Got it! Here’s the updated description with copyable dots:
-
 ## - **Proxy Generation**: Automatically generates proxies for the script.
 ## - **Account Management**: Handles multiple accounts seamlessly.
 ## - **Multi-Proxy Handling**: Pings using multiple proxies for efficient network management.
