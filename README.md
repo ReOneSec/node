@@ -1,4 +1,4 @@
-# NO BUYING PROXY ANYMORE 
+# NO NEED OF SEARCHING OR BUYING PROXY ANYMORE 💵
 
 ![Screenshot 2024-11-15 170404](https://github.com/user-attachments/assets/9d8f6d8c-91f0-4f7c-8981-6ab947e78876)
 
