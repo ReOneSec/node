@@ -1,6 +1,6 @@
 # Nodepay Ultimate
 
-## This Python Bot script manages WebSocket connections by generating specified HTTP proxies, Unlimited Proxies and multiple Nodepay Accounts handling authentication and maintaining persistent connections with a server. The script also includes functionality to periodically send ping messages to keep the connection alive forever. If you can run your pc 24/7 then you dont need a Vps or proxy server lol.
+**This script is designed to interact with Nodepay's API for session management, pulling proxy, connection monitoring & Fast accumulation of points . It is particularly useful for users who need to automate Nodepay workflows involving multiple accounts, proxies, and tokens.**
 
 # Features
 
