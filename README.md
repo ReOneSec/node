@@ -1,6 +1,6 @@
 # Nodepay Ultimate
 
-![Screenshot 2024-11-15 165310](https://github.com/user-attachments/assets/31e20ad7-52e3-46ed-989f-8c1c189087e0)
+![Screenshot 2024-11-15 170104](https://github.com/user-attachments/assets/3bfb32a2-cd6b-4be3-89fe-2f7d96321b83)
 
 # Features
 
