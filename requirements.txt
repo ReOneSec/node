@@ -1,7 +1,2 @@
-pip install requests
-pip install asyncio
-pip install aiohttp
-pip install uuid
-pip install cloudscraper
-pip install loguru
-python run-bypass.py
+cloudscraper
+loguru
