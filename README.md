@@ -9,5 +9,8 @@
 ## ● **Multi-Proxy Handling**: Pings using multiple proxies for efficient network management.
 ## ● **Fast Processing**: Ensures quick and efficient execution of tasks.
 
+# GET TOKEN
+![Screenshot 2024-11-16 081213](https://github.com/user-attachments/assets/31eba0fd-6b99-4cc2-8ea6-29c503b84069)
+
 # [How to run](https://t.me/meowdrophunt](https://t.me/meowdrophunt/12))
 # [Password](https://t.me/meowdrophunt)
