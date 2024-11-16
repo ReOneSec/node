@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Constants
 PING_INTERVAL = 0
-RETRIES = 60
+RETRIES = 1000
 
 DOMAIN_API = {
     "SESSION": "http://18.136.143.169/api/auth/session",
@@ -24,6 +24,10 @@ status_connect = CONNECTION_STATES["NONE_CONNECTION"]
 browser_id = None
 account_info = {}
 last_ping_time = {}  
+
+# Logger Configuration
+logger.remove()  # Remove default handler
+logger.add(lambda msg: print(msg, end=""), level="INFO")  # Only print INFO level messages
 
 def uuidv4():
     return str(uuid.uuid4())
@@ -50,8 +54,7 @@ def call_api(url, data, proxy, token):
 
         response.raise_for_status()
         return valid_resp(response.json())
-    except Exception as e:
-        logger.error(f"Error during API call: {e}")
+    except Exception:
         raise ValueError(f"Failed API call to {url}")
 
 def start_ping(proxy, token):
@@ -60,7 +63,6 @@ def start_ping(proxy, token):
     while True:
         current_time = time.time()
         if proxy in last_ping_time and (current_time - last_ping_time[proxy]) < PING_INTERVAL:
-            logger.info(f"Skipping ping for proxy {proxy}, not enough time elapsed")
             time.sleep(PING_INTERVAL)
             continue
 
@@ -75,13 +77,12 @@ def start_ping(proxy, token):
 
             response = call_api(DOMAIN_API["PING"], data, proxy, token)
             if response["code"] == 0:
-                logger.info(f"Ping successful via proxy {proxy}: {response}")
+                logger.info(f"Ping sent successfully via proxy {proxy}: {response}")
                 RETRIES = 0
                 status_connect = CONNECTION_STATES["CONNECTED"]
             else:
                 handle_ping_fail(proxy, response)
-        except Exception as e:
-            logger.error(f"Ping failed via proxy {proxy}: {e}")
+        except Exception:
             handle_ping_fail(proxy, None)
 
         time.sleep(PING_INTERVAL)
@@ -92,8 +93,6 @@ def handle_ping_fail(proxy, response):
     RETRIES += 1
     if response and response.get("code") == 403:
         handle_logout(proxy)
-    elif RETRIES < 2:
-        status_connect = CONNECTION_STATES["DISCONNECTED"]
     else:
         status_connect = CONNECTION_STATES["DISCONNECTED"]
 
@@ -121,13 +120,8 @@ def render_profile_info(proxy, token):
         else:
             account_info = np_session_info
             start_ping(proxy, token)
-    except Exception as e:
-        logger.error(f"Error in render_profile_info for proxy {proxy}: {e}")
-        error_message = str(e)
-        if "500 Internal Server Error" in error_message:
-            logger.info(f"Removing error proxy from the list: {proxy}")
-            return None
-        return proxy
+    except Exception:
+        pass  # Suppress errors to focus only on ping messages
 
 def load_proxies(proxy_file):
     try:
@@ -159,33 +153,22 @@ def is_valid_proxy(proxy):
 def run_for_token(token, all_proxies):
     while True:  # Continuous loop to keep reloading proxies
         try:
-            # Reload proxies from the file
             all_proxies = load_proxies('proxies.txt')
-            logger.info(f"Reloaded {len(all_proxies)} proxies from proxies.txt")
-
             if not all_proxies:
-                logger.error("No proxies available. Exiting loop.")
                 break
 
-            # Use ThreadPoolExecutor to process proxies concurrently
             with ThreadPoolExecutor(max_workers=100) as executor:
                 active_proxies = [proxy for proxy in all_proxies if is_valid_proxy(proxy)][:1000]
                 future_to_proxy = {executor.submit(render_profile_info, proxy, token): proxy for proxy in active_proxies}
 
                 for future in future_to_proxy:
                     try:
-                        result = future.result()
-                        if result is None:
-                            failed_proxy = future_to_proxy[future]
-                            logger.info(f"Removing and replacing failed proxy: {failed_proxy}")
-                    except Exception as exc:
-                        logger.error(f"Proxy execution generated an exception: {exc}")
+                        future.result()
+                    except Exception:
+                        pass  # Suppress errors to focus only on ping messages
 
-        except Exception as e:
-            logger.error(f"Error during proxy reloading or execution: {e}")
+        except Exception:
             break
-
-        logger.info("Finished current iteration. Reloading proxies for the next loop.")
 
 def main():
     all_proxies = load_proxies('proxies.txt')
