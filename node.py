@@ -6,7 +6,7 @@ from loguru import logger
 from concurrent.futures import ThreadPoolExecutor
 
 # Constants
-PING_INTERVAL = 1
+PING_INTERVAL = 0
 RETRIES = 60
 
 DOMAIN_API = {
@@ -157,18 +157,35 @@ def is_valid_proxy(proxy):
     return True
 
 def run_for_token(token, all_proxies):
-    with ThreadPoolExecutor(max_workers=100) as executor:
-        active_proxies = [proxy for proxy in all_proxies if is_valid_proxy(proxy)][:1000]
-        future_to_proxy = {executor.submit(render_profile_info, proxy, token): proxy for proxy in active_proxies}
+    while True:  # Continuous loop to keep reloading proxies
+        try:
+            # Reload proxies from the file
+            all_proxies = load_proxies('proxies.txt')
+            logger.info(f"Reloaded {len(all_proxies)} proxies from proxies.txt")
 
-        for future in future_to_proxy:
-            try:
-                result = future.result()
-                if result is None:
-                    failed_proxy = future_to_proxy[future]
-                    logger.info(f"Removing and replacing failed proxy: {failed_proxy}")
-            except Exception as exc:
-                logger.error(f"Proxy execution generated an exception: {exc}")
+            if not all_proxies:
+                logger.error("No proxies available. Exiting loop.")
+                break
+
+            # Use ThreadPoolExecutor to process proxies concurrently
+            with ThreadPoolExecutor(max_workers=100) as executor:
+                active_proxies = [proxy for proxy in all_proxies if is_valid_proxy(proxy)][:1000]
+                future_to_proxy = {executor.submit(render_profile_info, proxy, token): proxy for proxy in active_proxies}
+
+                for future in future_to_proxy:
+                    try:
+                        result = future.result()
+                        if result is None:
+                            failed_proxy = future_to_proxy[future]
+                            logger.info(f"Removing and replacing failed proxy: {failed_proxy}")
+                    except Exception as exc:
+                        logger.error(f"Proxy execution generated an exception: {exc}")
+
+        except Exception as e:
+            logger.error(f"Error during proxy reloading or execution: {e}")
+            break
+
+        logger.info("Finished current iteration. Reloading proxies for the next loop.")
 
 def main():
     all_proxies = load_proxies('proxies.txt')
