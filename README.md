@@ -13,4 +13,4 @@
 ![Screenshot 2024-11-16 081213](https://github.com/user-attachments/assets/7fc3d6f2-7b53-40f4-9f11-3c60d5d71d8e)
 
 # [How to run](https://t.me/meowdrophunt](https://t.me/meowdrophunt/12))
-# [Password](https://t.me/meowdrophunt)
+# [Password](https://t.me/meowdrophunt).
