@@ -6,12 +6,23 @@ from loguru import logger
 from concurrent.futures import ThreadPoolExecutor
 
 # Constants
-PING_INTERVAL = 0
-RETRIES = 1000
+PING_INTERVAL = 1
+RETRIES = 200
 
-DOMAIN_API = {
-    "SESSION": "https://api.nodepay.ai/api/auth/session",
-    "PING": "http://13.215.134.222/api/network/ping"
+DOMAIN_API_ENDPOINTS = {
+    "SESSION": [
+        "http://api.nodepay.ai/api/auth/session"
+    ],
+    "PING": [
+        "http://13.215.134.222/api/network/ping",
+        "http://18.139.20.49/api/network/ping",
+        "http://18.142.29.174/api/network/ping",
+        "http://18.142.214.13/api/network/ping",
+        "http://52.74.31.107/api/network/ping",
+        "http://52.74.35.173/api/network/ping",
+        "http://52.77.10.116/api/network/ping",
+        "http://3.1.154.253/api/network/ping"
+    ]
 }
 
 CONNECTION_STATES = {
@@ -23,11 +34,12 @@ CONNECTION_STATES = {
 status_connect = CONNECTION_STATES["NONE_CONNECTION"]
 browser_id = None
 account_info = {}
-last_ping_time = {}  
+last_ping_time = {}
+ping_index = 0  # To track the current ping API
 
 # Logger Configuration
-logger.remove()  # Remove default handler
-logger.add(lambda msg: print(msg, end=""), level="INFO")  # Only print INFO level messages
+logger.remove()
+logger.add(lambda msg: print(msg, end=""), level="INFO")
 
 def uuidv4():
     return str(uuid.uuid4())
@@ -36,6 +48,12 @@ def valid_resp(resp):
     if not resp or "code" not in resp or resp["code"] < 0:
         raise ValueError("Invalid response")
     return resp
+
+def get_next_ping_api():
+    global ping_index
+    ping_api = DOMAIN_API_ENDPOINTS["PING"][ping_index]
+    ping_index = (ping_index + 1) % len(DOMAIN_API_ENDPOINTS["PING"])  # Cycle through endpoints
+    return ping_api
 
 def call_api(url, data, proxy, token):
     headers = {
@@ -69,15 +87,16 @@ def start_ping(proxy, token):
         last_ping_time[proxy] = current_time
 
         try:
+            ping_url = get_next_ping_api()  # Get the next ping API
             data = {
                 "id": account_info.get("uid"),
                 "browser_id": browser_id,
                 "timestamp": int(time.time())
             }
 
-            response = call_api(DOMAIN_API["PING"], data, proxy, token)
+            response = call_api(ping_url, data, proxy, token)
             if response["code"] == 0:
-                logger.info(f"Ping sent successfully via proxy {proxy}: {response}")
+                logger.info(f"Ping sent successfully via proxy {proxy} to {ping_url}: {response}")
                 RETRIES = 0
                 status_connect = CONNECTION_STATES["CONNECTED"]
             else:
@@ -109,7 +128,7 @@ def render_profile_info(proxy, token):
         np_session_info = load_session_info(proxy)
         if not np_session_info:
             browser_id = uuidv4()
-            response = call_api(DOMAIN_API["SESSION"], {}, proxy, token)
+            response = call_api(DOMAIN_API_ENDPOINTS["SESSION"][0], {}, proxy, token)
             valid_resp(response)
             account_info = response["data"]
             if account_info.get("uid"):
